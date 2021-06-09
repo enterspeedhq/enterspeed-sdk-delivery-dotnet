@@ -3,24 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using Enterspeed.Delivery.Sdk.Domain.Helpers;
 
-namespace Enterspeed.Delivery.Sdk.Api.Models
+namespace Enterspeed.Delivery.Sdk.Domain.Models
 {
-    public class DeliveryQuery
+    internal class DeliveryQuery
     {
-        public DeliveryQuery()
-        {
-        }
-
-        public DeliveryQuery(string url, IList<string> handles, IList<string> ids)
+        internal DeliveryQuery(string url, IList<string> handles, IList<string> ids)
         {
             Url = url;
-            Handles = handles;
-            Ids = ids;
+            Handles = handles ?? new List<string>();
+            Ids = ids ?? new List<string>();
         }
 
         public string Url { get; set; }
-        public IList<string> Handles { get; set; } = new List<string>();
-        public IList<string> Ids { get; set; } = new List<string>();
+        public IList<string> Handles { get; set; }
+        public IList<string> Ids { get; set; }
 
         public Uri GetUri(Uri current, string path)
         {

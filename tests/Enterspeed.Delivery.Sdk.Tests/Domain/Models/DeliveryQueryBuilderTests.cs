@@ -5,7 +5,7 @@ using Enterspeed.Delivery.Sdk.Api.Models;
 using Enterspeed.Delivery.Sdk.Domain.Exceptions;
 using Xunit;
 
-namespace Enterspeed.Delivery.Sdk.Tests.Api.Models
+namespace Enterspeed.Delivery.Sdk.Tests.Domain.Models
 {
     public class DeliveryQueryBuilderTests
     {
@@ -20,9 +20,7 @@ namespace Enterspeed.Delivery.Sdk.Tests.Api.Models
         [Fact]
         public void Ids_CanAddId_Contains()
         {
-            var fixture = new DeliveryQueryBuilderTestFixture();
-
-            var sut = fixture.Create<DeliveryQueryBuilder>();
+            var sut = new DeliveryQueryBuilder();
 
             var id1 = "id1";
             var id2 = "id2";
@@ -40,9 +38,7 @@ namespace Enterspeed.Delivery.Sdk.Tests.Api.Models
         [Fact]
         public void Handles_CanAddHandle_Contains()
         {
-            var fixture = new DeliveryQueryBuilderTestFixture();
-
-            var sut = fixture.Create<DeliveryQueryBuilder>();
+            var sut = new DeliveryQueryBuilder();
 
             var handle1 = "handle1";
             var handle2 = "handle2";
@@ -60,9 +56,7 @@ namespace Enterspeed.Delivery.Sdk.Tests.Api.Models
         [Fact]
         public void Url_CanAddUrl_Contains()
         {
-            var fixture = new DeliveryQueryBuilderTestFixture();
-
-            var sut = fixture.Create<DeliveryQueryBuilder>();
+            var sut = new DeliveryQueryBuilder();
 
             var url = "/test/";
 
@@ -77,9 +71,7 @@ namespace Enterspeed.Delivery.Sdk.Tests.Api.Models
         [Fact]
         public void Url_AddsMoreThanOne_Throws()
         {
-            var fixture = new DeliveryQueryBuilderTestFixture();
-
-            var sut = fixture.Create<DeliveryQueryBuilder>();
+            var sut = new DeliveryQueryBuilder();
 
             var url = "/test/";
 
@@ -90,9 +82,7 @@ namespace Enterspeed.Delivery.Sdk.Tests.Api.Models
         [Fact]
         public void Url_CanAddSameUrl()
         {
-            var fixture = new DeliveryQueryBuilderTestFixture();
-
-            var sut = fixture.Create<DeliveryQueryBuilder>();
+            var sut = new DeliveryQueryBuilder();
 
             var url = "/test/";
 
@@ -107,9 +97,7 @@ namespace Enterspeed.Delivery.Sdk.Tests.Api.Models
         [Fact]
         public void Url_Handle_Id_contains()
         {
-            var fixture = new DeliveryQueryBuilderTestFixture();
-
-            var sut = fixture.Create<DeliveryQueryBuilder>();
+            var sut = new DeliveryQueryBuilder();
 
             var url = "/test/";
 

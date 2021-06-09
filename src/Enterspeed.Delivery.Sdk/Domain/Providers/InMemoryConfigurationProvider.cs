@@ -1,4 +1,5 @@
-﻿using Enterspeed.Delivery.Sdk.Api.Providers;
+﻿using System;
+using Enterspeed.Delivery.Sdk.Api.Providers;
 using Enterspeed.Delivery.Sdk.Configuration;
 
 namespace Enterspeed.Delivery.Sdk.Domain.Providers
@@ -7,7 +8,7 @@ namespace Enterspeed.Delivery.Sdk.Domain.Providers
     {
         public InMemoryConfigurationProvider(EnterspeedDeliveryConfiguration configuration)
         {
-            Configuration = configuration;
+            Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
         public EnterspeedDeliveryConfiguration Configuration { get; }
