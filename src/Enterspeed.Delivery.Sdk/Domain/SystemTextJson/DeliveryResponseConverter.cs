@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Enterspeed.Delivery.Sdk.Api.Models;
@@ -9,11 +8,6 @@ namespace Enterspeed.Delivery.Sdk.Domain.SystemTextJson
 {
     internal class DeliveryResponseConverter : JsonConverter<DeliveryResponse>
     {
-        private static bool IsNullOrUnknown(JsonElement value)
-        {
-            return value.ValueKind == JsonValueKind.Null || value.ValueKind == JsonValueKind.Undefined;
-        }
-
         public override DeliveryResponse Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var output = new DeliveryResponse();
@@ -28,56 +22,63 @@ namespace Enterspeed.Delivery.Sdk.Domain.SystemTextJson
 
             if (hasRoute)
             {
-                output.Route = Get(route, options);
+                output.Route = Get(route.EnumerateObject(), options);
             }
 
             if (hasViews)
             {
-                output.Views = Get(views, options);
+                output.Views = Get(views.EnumerateObject(), options);
             }
 
             return output;
         }
 
-        private Dictionary<string, object> Get(JsonElement value, JsonSerializerOptions options)
+        private Dictionary<string, object> Get(
+            JsonElement.ObjectEnumerator objectEnumerator,
+            JsonSerializerOptions options)
         {
-            if (IsNullOrUnknown(value))
-            {
-                return new Dictionary<string, object>();
-            }
-
             var output = new Dictionary<string, object>();
 
-            var elements = value.EnumerateObject();
-            foreach (var element in elements)
+            foreach (var element in objectEnumerator)
             {
-                if (IsNullOrUnknown(element.Value))
-                {
-                    output.Add(element.Name, null);
-                }
-
-                switch (element.Value.ValueKind)
-                {
-                    case JsonValueKind.String:
-                        output.Add(element.Name, element.Value.ToString());
-                        break;
-                    case JsonValueKind.Number:
-                        output.Add(element.Name, element.Value.GetDecimal());
-                        break;
-                    case JsonValueKind.False:
-                    case JsonValueKind.True:
-                        output.Add(element.Name, element.Value.GetBoolean());
-                        break;
-                    case JsonValueKind.Array:
-                        output.Add(element.Name, element.Value.EnumerateArray().Select(x => Get(x, options)));
-                        break;
-                    case JsonValueKind.Object:
-                        output.Add(element.Name, Get(element.Value, options));
-                        break;
-                }
+                output.Add(element.Name, GetElementValue(element.Value, options));
             }
 
             return output;
+        }
+
+        private IEnumerable<object> Get(
+            JsonElement.ArrayEnumerator arrayEnumerator,
+            JsonSerializerOptions options)
+        {
+            var output = new List<object>();
+
+            foreach (var element in arrayEnumerator)
+            {
+                output.Add(GetElementValue(element, options));
+            }
+
+            return output;
+        }
+
+        private object GetElementValue(JsonElement element, JsonSerializerOptions options)
+        {
+            switch (element.ValueKind)
+            {
+                case JsonValueKind.String:
+                    return element.ToString();
+                case JsonValueKind.Number:
+                    return element.GetDecimal();
+                case JsonValueKind.False:
+                case JsonValueKind.True:
+                    return element.GetBoolean();
+                case JsonValueKind.Array:
+                    return Get(element.EnumerateArray(), options);
+                case JsonValueKind.Object:
+                    return Get(element.EnumerateObject(), options);
+                default:
+                    return null;
+            }
         }
 
         public override void Write(Utf8JsonWriter writer, DeliveryResponse value, JsonSerializerOptions options)
