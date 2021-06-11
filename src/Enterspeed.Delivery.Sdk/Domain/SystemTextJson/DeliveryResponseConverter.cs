@@ -20,12 +20,12 @@ namespace Enterspeed.Delivery.Sdk.Domain.SystemTextJson
             var hasRoute = document.RootElement.TryGetProperty("route", out var route);
             var hasViews = document.RootElement.TryGetProperty("views", out var views);
 
-            if (hasRoute)
+            if (hasRoute && route.ValueKind != JsonValueKind.Null)
             {
                 output.Route = Get(route.EnumerateObject(), options);
             }
 
-            if (hasViews)
+            if (hasViews && route.ValueKind != JsonValueKind.Null)
             {
                 output.Views = Get(views.EnumerateObject(), options);
             }
