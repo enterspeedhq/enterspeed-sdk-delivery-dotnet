@@ -25,7 +25,7 @@ namespace Enterspeed.Delivery.Sdk.Domain.SystemTextJson
                 output.Route = Get(route.EnumerateObject(), options);
             }
 
-            if (hasViews && IsValueKindNotNull(route))
+            if (hasViews && views.ValueKind == JsonValueKind.Object)
             {
                 output.Views = Get(views.EnumerateObject(), options);
             }
