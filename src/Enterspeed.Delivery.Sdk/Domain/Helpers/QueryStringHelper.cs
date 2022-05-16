@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Text;
 namespace Enterspeed.Delivery.Sdk.Domain.Helpers
 {
     internal class QueryStringHelper
@@ -10,21 +10,13 @@ namespace Enterspeed.Delivery.Sdk.Domain.Helpers
 
         public override string ToString()
         {
-            var output = string.Empty;
-
+            var builder = new StringBuilder();
             for (var i = 0; i < _keys.Count; i++)
             {
-                if (i == 0)
-                {
-                    output += $"?{_keys[i]}={_values[i]}";
-                }
-                else
-                {
-                    output += $"&{_keys[i]}={_values[i]}";
-                }
+                builder.Append(i == 0 ? $"?{_keys[i]}={_values[i]}" : $"&{_keys[i]}={_values[i]}");
             }
 
-            return output;
+            return builder.ToString();
         }
 
         public void Add(string key, string value)
