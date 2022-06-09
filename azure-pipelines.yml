@@ -24,13 +24,6 @@ variables:
     semVersionRev: $[counter(variables.semVersionBase, 0)]
     semVersion: $[format('{0}.{1}', variables.semVersionBase, variables.semVersionRev)]
     buildName: $[format('Release - {0}', variables.semVersion)]
-  ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/') }}:
-    # Versioning: 1.0.0-feature.branch.123
-    releaseOnNuget: false
-    semVersionBase: $[format('{0}-feature.{1}', variables.version, variables['Build.SourceBranchName'])]
-    semVersionRev: $[counter(variables.semVersionBase, 0)]
-    semVersion: $[format('{0}.{1}', variables.semVersionBase, variables.semVersionRev)]
-    buildName: $[format('Feature - {0}', variables.semVersion)]
   ${{ if startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}: # Pull requests
     # Versioning: 1.0.0-pr.1.123
     releaseOnNuget: false
@@ -47,22 +40,6 @@ trigger:
       - master
       - develop
       - release/*
-      - feature/*
-      - bugfix/*
-  paths:
-    exclude:
-      - README.md
-      - CHANGELOG.md
-      - documentation/*
-   
-pr:
-  branches:
-    include:
-      - master
-      - develop
-      - release/*
-      - feature/*
-      - bugfix/*
   paths:
     exclude:
       - README.md
@@ -76,16 +53,19 @@ stages:
       - job: BuildPlatform
         displayName: Build Platform
         pool:
-          name: '$(agentPool)'
-          demands:
-          - msbuild
-          - visualstudio
+          vmImage: windows-latest
+
         steps:
+          - task: UseDotNet@2
+            displayName: Install .NET 6.0 SDK
+            inputs:
+              packageType: sdk
+              version: "6.0.x"
+
           # NuGet
           - task: NuGetToolInstaller@1
             displayName: NuGet install
-            inputs:
-              versionSpec: 4.8.1
+
           - task: NuGetCommand@2
             displayName: NuGet restore
             inputs:
@@ -95,13 +75,12 @@ stages:
               restoreDirectory: ../lib/packages
 
           # Build solution
-          - task: VSBuild@1
-            displayName: Build solution
+          - task: DotNetCoreCLI@2
+            displayName: Dotnet build
             inputs:
-              solution: ./Enterspeed.Sdk.Delivery.Dotnet.sln
-              platform: Any CPU
-              configuration: Release
-              maximumCpuCount: true
+              command: build
+              projects: "Enterspeed.Sdk.Delivery.Dotnet.sln"
+              arguments: "--configuration Release"
 
           # Run unit tests
           - task: DotNetCoreCLI@2
@@ -110,12 +89,12 @@ stages:
               command: test
               arguments: '--no-build --configuration Release --collect:"XPlat Code Coverage"'
 
-          # Pack NuGet 
+          # Pack NuGet
           - task: DotNetCoreCLI@2
             displayName: Dotnet pack
             inputs:
               command: pack
-              packagesToPack: '**/*.csproj'
+              packagesToPack: "**/*.csproj"
               versioningScheme: byEnvVar
               versionEnvVar: semVersion
 
@@ -123,7 +102,7 @@ stages:
           - task: PublishPipelineArtifact@1
             displayName: Publish artifact - nupkg
             inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)'
+              targetPath: "$(Build.ArtifactStagingDirectory)"
               artifact: nupkg
 
   - stage: Release
@@ -152,11 +131,11 @@ stages:
                     script: |
                       git tag $(semVersion)
                       git push --tags
-                      
+
                 - task: NuGetCommand@2
                   displayName: Release on NuGet.org
                   inputs:
                     command: push
-                    packagesToPush: '$(Pipeline.Workspace)/**/*.nupkg;!$(Pipeline.Workspace)/**/*.symbols.nupkg'
+                    packagesToPush: "$(Pipeline.Workspace)/**/*.nupkg;!$(Pipeline.Workspace)/**/*.symbols.nupkg"
                     nuGetFeedType: external
                     publishFeedCredentials: NuGet.org

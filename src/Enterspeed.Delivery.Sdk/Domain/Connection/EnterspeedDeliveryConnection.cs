@@ -2,19 +2,21 @@
 using System.Net.Http;
 using Enterspeed.Delivery.Sdk.Api.Connection;
 using Enterspeed.Delivery.Sdk.Api.Providers;
-
+using Enterspeed.Delivery.Sdk.Configuration;
 namespace Enterspeed.Delivery.Sdk.Domain.Connection
 {
-    public class EnterspeedDeliveryConnection : IEnterspeedDeliveryConnection
+    public sealed class EnterspeedDeliveryConnection : IEnterspeedDeliveryConnection, IDisposable
     {
-        private readonly IEnterspeedConfigurationProvider _configurationProvider;
-        private HttpClient _httpClientConnection;
-        private DateTime? _connectionEstablishedDate;
         private readonly int _connectionTimeout;
+        private DateTime? _connectionEstablishedDate;
+        private HttpClient _httpClientConnection;
 
         public EnterspeedDeliveryConnection(IEnterspeedConfigurationProvider configurationProvider)
         {
-            _configurationProvider = configurationProvider ?? throw new ArgumentNullException(nameof(configurationProvider));
+            if (configurationProvider == null)
+            {
+                throw new ArgumentNullException(nameof(configurationProvider));
+            }
 
             BaseUrl = configurationProvider.Configuration?.BaseUrl;
             _connectionTimeout = configurationProvider.Configuration?.ConnectionTimeout ?? 60;
@@ -22,13 +24,18 @@ namespace Enterspeed.Delivery.Sdk.Domain.Connection
 
         private string BaseUrl { get; }
 
+        public void Dispose()
+        {
+            _httpClientConnection?.Dispose();
+        }
+
         public HttpClient HttpClientConnection
         {
             get
             {
                 if (_httpClientConnection == null
                     || !_connectionEstablishedDate.HasValue
-                    || ((DateTime.Now - _connectionEstablishedDate.Value).TotalSeconds > _connectionTimeout))
+                    || (DateTime.Now - _connectionEstablishedDate.Value).TotalSeconds > _connectionTimeout)
                 {
                     Connect();
                 }
@@ -47,12 +54,12 @@ namespace Enterspeed.Delivery.Sdk.Domain.Connection
         {
             if (string.IsNullOrWhiteSpace(BaseUrl))
             {
-                throw new Exception("BaseUrl is missing in the connection.");
+                throw new ConfigurationException(nameof(BaseUrl));
             }
 
             _httpClientConnection = new HttpClient
             {
-                BaseAddress = new System.Uri(BaseUrl)
+                BaseAddress = new Uri(BaseUrl)
             };
 
             _httpClientConnection.DefaultRequestHeaders.Add("Accept", "application/json");

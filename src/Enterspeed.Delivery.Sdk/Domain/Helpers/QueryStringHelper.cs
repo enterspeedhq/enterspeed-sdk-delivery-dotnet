@@ -1,30 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Web;
 
 namespace Enterspeed.Delivery.Sdk.Domain.Helpers
 {
-    internal class QueryStringHelper
+     internal class QueryStringHelper
     {
-        private readonly IList<string> _keys = new List<string>();
-        private readonly IList<string> _values = new List<string>();
+        private readonly List<KeyValuePair<string, string>> _parameters = new List<KeyValuePair<string, string>>();
 
         public override string ToString()
         {
-            var output = string.Empty;
-
-            for (var i = 0; i < _keys.Count; i++)
-            {
-                if (i == 0)
-                {
-                    output += $"?{_keys[i]}={_values[i]}";
-                }
-                else
-                {
-                    output += $"&{_keys[i]}={_values[i]}";
-                }
-            }
-
-            return output;
+            var keyValues = _parameters.Select(
+                kvp => $"{HttpUtility.UrlEncode(kvp.Key)}={HttpUtility.UrlEncode(kvp.Value)}");
+            return string.Concat("?", string.Join("&", keyValues));
         }
 
         public void Add(string key, string value)
@@ -39,8 +28,7 @@ namespace Enterspeed.Delivery.Sdk.Domain.Helpers
                 throw new ArgumentNullException(nameof(value), "Value cannot be an empty string or null");
             }
 
-            _keys.Add(key);
-            _values.Add(value);
+            _parameters.Add(new KeyValuePair<string, string>(key, value));
         }
     }
 }

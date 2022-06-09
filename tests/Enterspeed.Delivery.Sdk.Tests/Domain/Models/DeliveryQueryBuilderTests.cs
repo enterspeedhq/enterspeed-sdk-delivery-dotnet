@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Web;
 using AutoFixture;
 using AutoFixture.AutoNSubstitute;
 using Enterspeed.Delivery.Sdk.Api.Models;
@@ -65,7 +66,7 @@ namespace Enterspeed.Delivery.Sdk.Tests.Domain.Models
             var query = sut.Build();
             var uri = query.GetUri(new Uri("https://example.com"), "/v1");
 
-            Assert.Contains("url=/test/", uri.AbsoluteUri);
+            Assert.Contains("url=/test/", HttpUtility.UrlDecode(uri.AbsoluteUri));
         }
 
         [Fact]
@@ -108,7 +109,7 @@ namespace Enterspeed.Delivery.Sdk.Tests.Domain.Models
             var query = sut.Build();
             var uri = query.GetUri(new Uri("https://example.com"), "/v1");
 
-            Assert.Contains(url, uri.AbsoluteUri);
+            Assert.Contains(url, HttpUtility.UrlDecode(uri.AbsoluteUri));
             Assert.Contains("handle=handle1", uri.AbsoluteUri);
             Assert.Contains("id=id1", uri.AbsoluteUri);
         }
