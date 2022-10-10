@@ -1,40 +1,42 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
+	<PropertyGroup>
 
-    <PackageId>Enterspeed.Delivery.Sdk</PackageId>
-    <Authors>Enterspeed</Authors>
-    <Description>.NET SDK for Enterspeed Delivery API</Description>
-    <IsPackable>true</IsPackable>
-    <RepositoryUrl>https://github.com/enterspeedhq/enterspeed-sdk-delivery-dotnet</RepositoryUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageId>Enterspeed.Delivery.Sdk</PackageId>
+		<Authors>Enterspeed</Authors>
+		<Description>.NET SDK for Enterspeed Delivery API</Description>
+		<IsPackable>true</IsPackable>
+		<RepositoryUrl>https://github.com/enterspeedhq/enterspeed-sdk-delivery-dotnet</RepositoryUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 
-    <CodeAnalysisRuleSet>..\..\lib\settings\Enterspeed.ruleset</CodeAnalysisRuleSet>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
-  </PropertyGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
+		<CodeAnalysisRuleSet>..\..\lib\settings\Enterspeed.ruleset</CodeAnalysisRuleSet>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
+	</PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Text.Json" Version="[5.0,7.0)" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
 
-  <ItemGroup>
-    <AdditionalFiles Include="..\..\lib\settings\stylecop.json">
-      <Link>stylecop.json</Link>
-    </AdditionalFiles>
-  </ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+		<PackageReference Include="System.Text.Json" Version="[5.0,7.0)" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+		<PackageReference Include="System.Text.Json" Version="[5.0,7.0)" />
+	</ItemGroup>
+	<ItemGroup>
+		<AdditionalFiles Include="..\..\lib\settings\stylecop.json">
+			<Link>stylecop.json</Link>
+		</AdditionalFiles>
+	</ItemGroup>
 
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Enterspeed.Delivery.Sdk.Tests</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>Enterspeed.Delivery.Sdk.Tests</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
 
 </Project>
