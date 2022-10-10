@@ -1,4 +1,4 @@
-﻿#if NETSTANDARD2_0
+﻿#if NETSTANDARD2_0_OR_GREATER || NET5_0_OR_GREATER
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
