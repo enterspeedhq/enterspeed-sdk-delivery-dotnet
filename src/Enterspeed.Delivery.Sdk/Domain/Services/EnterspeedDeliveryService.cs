@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Enterspeed.Delivery.Sdk.Api.Models;
 using Enterspeed.Delivery.Sdk.Api.Providers;
 using Enterspeed.Delivery.Sdk.Api.Services;
+using Enterspeed.Delivery.Sdk.Configuration;
 using Enterspeed.Delivery.Sdk.Domain.Connection;
 
 namespace Enterspeed.Delivery.Sdk.Domain.Services
@@ -30,6 +31,11 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
             if (string.IsNullOrWhiteSpace(apiKey))
             {
                 throw new ArgumentNullException(nameof(apiKey), "API key must be set");
+            }
+
+            if (string.IsNullOrWhiteSpace(_configurationProvider.Configuration.DeliveryVersion))
+            {
+                throw new ConfigurationException(nameof(EnterspeedDeliveryConfiguration.DeliveryVersion));
             }
 
             var queryBuilder = new DeliveryQueryBuilder();
