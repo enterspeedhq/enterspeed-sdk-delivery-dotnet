@@ -13,8 +13,8 @@
         public int ConnectionTimeout { get; set; } = 60;
 
         /// <summary>
-        /// Gets the current version for the Delivery Endpoint.
+        /// Gets or sets the current version for the Delivery Endpoint.
         /// </summary>
-        public string DeliveryVersion => "1";
+        public string DeliveryVersion { get; set; } = "2";
     }
 }
