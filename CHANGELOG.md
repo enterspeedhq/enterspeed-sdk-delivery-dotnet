@@ -5,8 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
 ## [Unreleased]
+### Breaking
+  - Updated default delivery version to 2. Simply set delivery version back to 1 if you are not ready for v2 yet.
+
 ### Added
-  - Allow configuration of delivery version and updated default value to 2
+  - Allow configuration of delivery version
 
 ## [0.1.3 - 2021-16-10]
 ### Fixed
