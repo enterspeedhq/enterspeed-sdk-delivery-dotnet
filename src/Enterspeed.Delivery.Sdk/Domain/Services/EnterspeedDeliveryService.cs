@@ -43,14 +43,21 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
 
             var query = queryBuilder.Build();
 
-            var requestUri = query.GetUri(_enterspeedDeliveryConnection.HttpClientConnection.BaseAddress, $"/v{_configurationProvider.Configuration.DeliveryVersion}");
+            Uri requestUri;
+            if (!queryBuilder.IsAbsoluteUrl)
+            {
+                requestUri = query.GetUri(_enterspeedDeliveryConnection.HttpClientConnection.BaseAddress, $"/v{_configurationProvider.Configuration.DeliveryVersion}");
+            }
+            else
+            {
+                requestUri = query.GetUri();
+            }
 
             using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri))
             {
                 requestMessage.Headers.Add("X-Api-Key", apiKey);
 
-                var response =
-                    await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage);
+                var response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage);
 
                 var responseString = await response.Content.ReadAsStringAsync();
 

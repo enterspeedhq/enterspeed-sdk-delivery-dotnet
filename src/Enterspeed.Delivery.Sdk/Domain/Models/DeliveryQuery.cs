@@ -49,5 +49,10 @@ namespace Enterspeed.Delivery.Sdk.Domain.Models
 
             return uriBuilder.Uri;
         }
+
+        public Uri GetUri()
+        {
+            return new Uri(Url);
+        }
     }
 }

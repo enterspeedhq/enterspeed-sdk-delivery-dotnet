@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Enterspeed.Delivery.Sdk.Domain.Exceptions;
 using Enterspeed.Delivery.Sdk.Domain.Models;
 
@@ -13,6 +14,7 @@ namespace Enterspeed.Delivery.Sdk.Api.Models
         private readonly IList<string> _handles = new List<string>();
         private readonly IList<string> _ids = new List<string>();
         private string _url;
+        public bool IsAbsoluteUrl { get; private set; }
 
         public DeliveryQueryBuilder WithHandle(string handle)
         {
@@ -44,6 +46,12 @@ namespace Enterspeed.Delivery.Sdk.Api.Models
             }
 
             _url = url;
+            return this;
+        }
+
+        public DeliveryQueryBuilder Absolute()
+        {
+            IsAbsoluteUrl = true;
             return this;
         }
 
