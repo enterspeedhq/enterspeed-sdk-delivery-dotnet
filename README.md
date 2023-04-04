@@ -13,6 +13,63 @@ With Package Manager
 ```bash
 Install-Package Enterspeed.Delivery.Sdk -Version <version>
 ```
+## How to use
+
+### Register services
+Service has to be added to the service collection. This can be one by using the following extension method.
+```c#
+using IHost host = Host.CreateDefaultBuilder(args)
+    .ConfigureServices((_, services) =>
+        services.AddEnterspeedDeliveryService(new EnterspeedDeliveryConfiguration()
+            {
+                    DeliveryVersion = "2",
+                    BaseUrl = "https://delivery.enterspeed.com"
+            }))
+    .Build();
+```
+### Examples of usage
+Example of a common implementation where the delivery service is being utilized.
+```c#
+using Enterspeed.Delivery.Sdk.Api.Models;
+using Enterspeed.Delivery.Sdk.Api.Services;
+
+namespace DeliverySdkStronglyTypeTest; 
+
+public class TestService
+{
+    private readonly IEnterspeedDeliveryService _enterspeedDeliveryService;
+    
+    public TestService(IEnterspeedDeliveryService enterspeedDeliveryService)
+    {
+        _enterspeedDeliveryService = enterspeedDeliveryService;
+    }
+
+    // Handle that has been setup to return a view in Enterspeed.
+    public async  Task<DeliveryApiResponse> WithHandle()
+    {
+        var response =await _enterspeedDeliveryService.Fetch("environment-******-****-****-****-**********", builder => builder.WithHandle("navigation"));
+        return response;
+    }
+
+    // Example method that calls a Url route in Enterspeed.
+    public async Task<DeliveryApiResponse> WithUrl()
+    {
+        var response =   await _enterspeedDeliveryService.Fetch("environment-******-****-****-****-**********", builder => builder.WithUrl("http://localhost:3000/"));
+        return response;
+    }
+    
+    // Example method that calls a fully qualified url in Enterspeed. This is typically used in cojunction with a webhook from Enterspeed.
+    // Weebhook typically returns an Delivery Api Url. This means that we do not need to construct a Delivery Api Url in code.  
+    public async Task<DeliveryApiResponse> WithDeliveryApiUrl()
+    {
+        var response =   await _enterspeedDeliveryService.Fetch("environment-******-****-****-****-**********", builder => builder.WithDeliveryApiUrl("absolute url returned from delivery api"));
+        return response;
+    }
+}
+```
+
+
+
 
 ## Contributing
 
