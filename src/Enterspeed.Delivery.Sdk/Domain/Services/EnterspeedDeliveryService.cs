@@ -44,7 +44,8 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
             var query = queryBuilder.Build();
 
             Uri requestUri;
-            if (!queryBuilder.IsAbsoluteUrl)
+
+            if (!query.IsDeliveryApiUrl)
             {
                 requestUri = query.GetUri(_enterspeedDeliveryConnection.HttpClientConnection.BaseAddress, $"/v{_configurationProvider.Configuration.DeliveryVersion}");
             }

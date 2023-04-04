@@ -14,7 +14,7 @@ namespace Enterspeed.Delivery.Sdk.Api.Models
         private readonly IList<string> _handles = new List<string>();
         private readonly IList<string> _ids = new List<string>();
         private string _url;
-        public bool IsAbsoluteUrl { get; private set; }
+        private bool _isDeliveryApiUrl { get; set; }
 
         public DeliveryQueryBuilder WithHandle(string handle)
         {
@@ -49,15 +49,21 @@ namespace Enterspeed.Delivery.Sdk.Api.Models
             return this;
         }
 
-        public DeliveryQueryBuilder Absolute()
+        public DeliveryQueryBuilder WithDeliveryApiUrl(string url)
         {
-            IsAbsoluteUrl = true;
+            if (_url != null && url != _url)
+            {
+                throw new EnterspeedDeliveryException("Only one URL is allowed.");
+            }
+
+            _isDeliveryApiUrl = true;
+            _url = url;
             return this;
         }
 
         internal DeliveryQuery Build()
         {
-            return new DeliveryQuery(_url, _handles, _ids);
+            return new DeliveryQuery(_url, _handles, _ids, _isDeliveryApiUrl);
         }
     }
 }
