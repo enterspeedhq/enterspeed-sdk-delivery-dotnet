@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Enterspeed.Delivery.Sdk.Domain.Exceptions;
 using Enterspeed.Delivery.Sdk.Domain.Models;
 
@@ -14,7 +13,7 @@ namespace Enterspeed.Delivery.Sdk.Api.Models
         private readonly IList<string> _handles = new List<string>();
         private readonly IList<string> _ids = new List<string>();
         private string _url;
-        private bool _isDeliveryApiUrl { get; set; }
+        private bool _isDeliveryApiUrl;
 
         public DeliveryQueryBuilder WithHandle(string handle)
         {
