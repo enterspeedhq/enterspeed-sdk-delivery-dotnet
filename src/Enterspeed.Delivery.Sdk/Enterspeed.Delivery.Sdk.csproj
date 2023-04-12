@@ -9,17 +9,12 @@
 		<RepositoryUrl>https://github.com/enterspeedhq/enterspeed-sdk-delivery-dotnet</RepositoryUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 
-		<CodeAnalysisRuleSet>..\..\lib\settings\Enterspeed.ruleset</CodeAnalysisRuleSet>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
-		<PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
@@ -27,11 +22,6 @@
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
 		<PackageReference Include="System.Text.Json" Version="[5.0,8.0)" />
-	</ItemGroup>
-	<ItemGroup>
-		<AdditionalFiles Include="..\..\lib\settings\stylecop.json">
-			<Link>stylecop.json</Link>
-		</AdditionalFiles>
 	</ItemGroup>
 
 	<ItemGroup>
