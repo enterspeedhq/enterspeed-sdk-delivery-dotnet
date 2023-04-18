@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- Added `AddEnterspeedDeliveryService` extension method for easier registration
+- Added `WithDeliveryApiUrl` method on `DeliveryQueryBuilder` to handle absolute urls for the delivery API send from webhooks requests
+
+### Updated
+  - Updated dependencies to allow System.Text.Json v7
+
 ## [1.0.0 - 2022-11-21]
 ### Breaking
   - Updated default delivery version to 2. Simply set delivery version back to 1 if you are not ready for v2 yet.

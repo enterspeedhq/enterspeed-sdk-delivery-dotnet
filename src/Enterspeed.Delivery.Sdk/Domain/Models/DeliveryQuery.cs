@@ -7,13 +7,15 @@ namespace Enterspeed.Delivery.Sdk.Domain.Models
 {
     internal class DeliveryQuery
     {
-        internal DeliveryQuery(string url, IList<string> handles, IList<string> ids)
+        internal DeliveryQuery(string url, IList<string> handles, IList<string> ids, bool isDeliveryApiUrl)
         {
             Url = url;
             Handles = handles ?? new List<string>();
             Ids = ids ?? new List<string>();
+            IsDeliveryApiUrl = isDeliveryApiUrl;
         }
 
+        public bool IsDeliveryApiUrl { get; set; }
         public string Url { get; set; }
         public IList<string> Handles { get; set; }
         public IList<string> Ids { get; set; }
@@ -48,6 +50,11 @@ namespace Enterspeed.Delivery.Sdk.Domain.Models
             uriBuilder.Query = query.ToString();
 
             return uriBuilder.Uri;
+        }
+
+        public Uri GetUri()
+        {
+            return new Uri(Url);
         }
     }
 }

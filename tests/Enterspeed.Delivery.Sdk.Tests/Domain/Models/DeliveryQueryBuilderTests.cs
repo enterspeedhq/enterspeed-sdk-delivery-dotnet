@@ -113,5 +113,61 @@ namespace Enterspeed.Delivery.Sdk.Tests.Domain.Models
             Assert.Contains("handle=handle1", uri.AbsoluteUri);
             Assert.Contains("id=id1", uri.AbsoluteUri);
         }
+
+        [Fact]
+        public void DeliveryApiUrl_CanAddUrl_Equal()
+        {
+            var sut = new DeliveryQueryBuilder();
+
+            var url = "https://delivery.enterspeed.com/v2?url=http://localhost:3000/";
+
+            sut.WithDeliveryApiUrl(url);
+
+            var query = sut.Build();
+            var uri = query.GetUri();
+
+            Assert.Equal(url, HttpUtility.UrlDecode(uri.AbsoluteUri));
+        }
+
+        [Fact]
+        public void DeliveryApiUrl_AddsMoreThanOne_Throws()
+        {
+            var sut = new DeliveryQueryBuilder();
+
+            var url = "https://delivery.enterspeed.com/v2?url=http://localhost:3000/";
+
+            sut.WithDeliveryApiUrl(url);
+            Assert.Throws<EnterspeedDeliveryException>(() => sut.WithDeliveryApiUrl("https://delivery.enterspeed.com/v2?url=http://localhost:3001/"));
+        }
+
+        [Fact]
+        public void DeliveryApiUrl_CanAddSameUrl()
+        {
+            var sut = new DeliveryQueryBuilder();
+
+            var url = "https://delivery.enterspeed.com/v2?url=http://localhost:3000/";
+
+            sut.WithDeliveryApiUrl(url);
+            sut.WithDeliveryApiUrl(url);
+
+            var query = sut.Build();
+
+            Assert.Equal(url, query.Url);
+        }
+
+        [Fact]
+        public void DeliveryApiUrl_Url_Handle_Id_Equal()
+        {
+            var sut = new DeliveryQueryBuilder();
+
+            var url = "https://delivery.enterspeed.com/v2?url=http://localhost:3000/&handle=handle1&id=id1";
+
+            sut.WithDeliveryApiUrl(url);
+
+            var query = sut.Build();
+            var uri = query.GetUri();
+
+            Assert.Equal(url, HttpUtility.UrlDecode(uri.AbsoluteUri));
+        }
     }
 }
