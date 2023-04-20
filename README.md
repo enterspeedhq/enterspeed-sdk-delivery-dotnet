@@ -20,11 +20,7 @@ Service has to be added to the service collection. This can be one by using the 
 ```c#
 using IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((_, services) =>
-        services.AddEnterspeedDeliveryService(new EnterspeedDeliveryConfiguration()
-            {
-                    DeliveryVersion = "2",
-                    BaseUrl = "https://delivery.enterspeed.com"
-            }))
+        services.AddEnterspeedDeliveryService())
     .Build();
 ```
 ### Examples of usage

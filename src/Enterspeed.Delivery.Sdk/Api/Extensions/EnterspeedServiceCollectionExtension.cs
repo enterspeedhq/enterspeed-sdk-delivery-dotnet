@@ -10,12 +10,12 @@ namespace Enterspeed.Delivery.Sdk.Api.Extensions
 {
     public static class EnterspeedServiceCollectionExtension
     {
-        public static IServiceCollection AddEnterspeedDeliveryService(this IServiceCollection services, EnterspeedDeliveryConfiguration enterspeedDeliveryConfiguration)
+        public static IServiceCollection AddEnterspeedDeliveryService(this IServiceCollection services, EnterspeedDeliveryConfiguration enterspeedDeliveryConfiguration = null)
         {
             services.AddTransient<IEnterspeedDeliveryService, EnterspeedDeliveryService>();
             services.AddTransient<IJsonSerializer, SystemTextJsonSerializer>();
             services.AddTransient<EnterspeedDeliveryConnection>();
-            services.AddSingleton<IEnterspeedConfigurationProvider>(new EnterspeedConfigurationProvider(enterspeedDeliveryConfiguration));
+            services.AddSingleton<IEnterspeedConfigurationProvider>(new EnterspeedConfigurationProvider(enterspeedDeliveryConfiguration ?? new EnterspeedDeliveryConfiguration()));
             return services;
         }
     }
