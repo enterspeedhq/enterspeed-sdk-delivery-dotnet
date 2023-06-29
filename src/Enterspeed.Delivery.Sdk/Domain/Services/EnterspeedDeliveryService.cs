@@ -30,8 +30,8 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
         public async Task<DeliveryApiResponse> Fetch(string apiKey, CancellationToken cancellationToken, Action<DeliveryQueryBuilder> builder = null)
         {
             Validate(apiKey);
-            
-            var requestUri = RequestUri(apiKey, builder);
+
+            var requestUri = RequestUri(builder);
             return await DeliveryApiResponse(apiKey, requestUri, cancellationToken);
         }
 
@@ -39,11 +39,11 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
         {
             Validate(apiKey);
 
-            var requestUri = RequestUri(apiKey, builder);
+            var requestUri = RequestUri(builder);
             return await DeliveryApiResponse(apiKey, requestUri);
         }
 
-        private Uri RequestUri(string apiKey, Action<DeliveryQueryBuilder> builder)
+        private Uri RequestUri(Action<DeliveryQueryBuilder> builder)
         {
             var queryBuilder = new DeliveryQueryBuilder();
             builder?.Invoke(queryBuilder);
