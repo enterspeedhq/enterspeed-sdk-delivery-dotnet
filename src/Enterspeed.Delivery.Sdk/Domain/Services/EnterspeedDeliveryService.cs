@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Enterspeed.Delivery.Sdk.Api.Models;
 using Enterspeed.Delivery.Sdk.Api.Providers;
@@ -26,7 +27,45 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
             _serializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
         }
 
+        public async Task<DeliveryApiResponse> Fetch(string apiKey, CancellationToken cancellationToken, Action<DeliveryQueryBuilder> builder = null)
+        {
+            Validate(apiKey);
+
+            var requestUri = RequestUri(builder);
+            return await DeliveryApiResponse(apiKey, requestUri, cancellationToken);
+        }
+
         public async Task<DeliveryApiResponse> Fetch(string apiKey, Action<DeliveryQueryBuilder> builder = null)
+        {
+            Validate(apiKey);
+
+            var requestUri = RequestUri(builder);
+            return await DeliveryApiResponse(apiKey, requestUri);
+        }
+
+        private Uri RequestUri(Action<DeliveryQueryBuilder> builder)
+        {
+            var queryBuilder = new DeliveryQueryBuilder();
+            builder?.Invoke(queryBuilder);
+
+            var query = queryBuilder.Build();
+
+            Uri requestUri;
+
+            if (!query.IsDeliveryApiUrl)
+            {
+                requestUri = query.GetUri(_enterspeedDeliveryConnection.HttpClientConnection.BaseAddress,
+                    $"/v{_configurationProvider.Configuration.DeliveryVersion}");
+            }
+            else
+            {
+                requestUri = query.GetUri();
+            }
+
+            return requestUri;
+        }
+
+        private void Validate(string apiKey)
         {
             if (string.IsNullOrWhiteSpace(apiKey))
             {
@@ -37,28 +76,24 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
             {
                 throw new ConfigurationException(nameof(EnterspeedDeliveryConfiguration.DeliveryVersion));
             }
+        }
 
-            var queryBuilder = new DeliveryQueryBuilder();
-            builder?.Invoke(queryBuilder);
-
-            var query = queryBuilder.Build();
-
-            Uri requestUri;
-
-            if (!query.IsDeliveryApiUrl)
-            {
-                requestUri = query.GetUri(_enterspeedDeliveryConnection.HttpClientConnection.BaseAddress, $"/v{_configurationProvider.Configuration.DeliveryVersion}");
-            }
-            else
-            {
-                requestUri = query.GetUri();
-            }
-
+        private async Task<DeliveryApiResponse> DeliveryApiResponse(string apiKey, Uri requestUri, CancellationToken? cancellationToken = null)
+        {
             using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri))
             {
+                HttpResponseMessage response;
+
                 requestMessage.Headers.Add("X-Api-Key", apiKey);
 
-                var response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage);
+                if (cancellationToken.HasValue)
+                {
+                    response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage, cancellationToken.Value);
+                }
+                else
+                {
+                    response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage);
+                }
 
                 var responseString = await response.Content.ReadAsStringAsync();
 
