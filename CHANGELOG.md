@@ -32,7 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Fix deserialization for handles without route
 
 ## [0.1.2 - 2021-10-16]
-
+### Fixed
   - Fix deserialization for redirects
 
 ## [0.1.0 - 2021-11-06]
