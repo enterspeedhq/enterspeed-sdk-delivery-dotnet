@@ -28,7 +28,6 @@ namespace Enterspeed.Delivery.Sdk.Domain.SystemTextJson
                 _options.Converters.Add(new DeliveryResponseTypedConverter());
                 _options.Converters.Add(new DeliveryResponseConverter());
                 _options.Converters.Add(new ContentConverter());
-                
             }
         }
 
