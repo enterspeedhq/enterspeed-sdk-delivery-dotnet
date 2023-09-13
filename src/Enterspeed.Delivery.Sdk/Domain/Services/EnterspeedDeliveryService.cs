@@ -6,31 +6,26 @@ using System.Threading.Tasks;
 using Enterspeed.Delivery.Sdk.Api.Models;
 using Enterspeed.Delivery.Sdk.Api.Providers;
 using Enterspeed.Delivery.Sdk.Api.Services;
-using Enterspeed.Delivery.Sdk.Configuration;
 using Enterspeed.Delivery.Sdk.Domain.Connection;
 
 namespace Enterspeed.Delivery.Sdk.Domain.Services
 {
-    public class EnterspeedDeliveryService : IEnterspeedDeliveryService
+    public class EnterspeedDeliveryService : BaseEnterspeedDeliveryService, IEnterspeedDeliveryService
     {
-        private readonly EnterspeedDeliveryConnection _enterspeedDeliveryConnection;
-        private readonly IEnterspeedConfigurationProvider _configurationProvider;
         private readonly IJsonSerializer _serializer;
 
         public EnterspeedDeliveryService(
             EnterspeedDeliveryConnection enterspeedDeliveryConnection,
             IEnterspeedConfigurationProvider configurationProvider,
             IJsonSerializer jsonSerializer)
+            : base(enterspeedDeliveryConnection, configurationProvider)
         {
-            _enterspeedDeliveryConnection = enterspeedDeliveryConnection ?? throw new ArgumentNullException(nameof(enterspeedDeliveryConnection));
-            _configurationProvider = configurationProvider ?? throw new ArgumentNullException(nameof(configurationProvider));
             _serializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
         }
 
         public async Task<DeliveryApiResponse> Fetch(string apiKey, CancellationToken cancellationToken, Action<DeliveryQueryBuilder> builder = null)
         {
             Validate(apiKey);
-
             var requestUri = RequestUri(builder);
             return await DeliveryApiResponse(apiKey, requestUri, cancellationToken);
         }
@@ -38,63 +33,52 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
         public async Task<DeliveryApiResponse> Fetch(string apiKey, Action<DeliveryQueryBuilder> builder = null)
         {
             Validate(apiKey);
-
             var requestUri = RequestUri(builder);
             return await DeliveryApiResponse(apiKey, requestUri);
         }
 
-        private Uri RequestUri(Action<DeliveryQueryBuilder> builder)
+        public async Task<DeliveryApiResponse<IContent>> FetchTyped(string apiKey, CancellationToken cancellationToken, Action<DeliveryQueryBuilder> builder = null)
         {
-            var queryBuilder = new DeliveryQueryBuilder();
-            builder?.Invoke(queryBuilder);
-
-            var query = queryBuilder.Build();
-
-            Uri requestUri;
-
-            if (!query.IsDeliveryApiUrl)
-            {
-                requestUri = query.GetUri(_enterspeedDeliveryConnection.HttpClientConnection.BaseAddress,
-                    $"/v{_configurationProvider.Configuration.DeliveryVersion}");
-            }
-            else
-            {
-                requestUri = query.GetUri();
-            }
-
-            return requestUri;
+            Validate(apiKey);
+            var requestUri = RequestUri(builder);
+            return await DeliveryApiResponseTyped(apiKey, requestUri, cancellationToken);
         }
 
-        private void Validate(string apiKey)
+        public async Task<DeliveryApiResponse<IContent>> FetchTyped(string apiKey, Action<DeliveryQueryBuilder> builder = null)
         {
-            if (string.IsNullOrWhiteSpace(apiKey))
-            {
-                throw new ArgumentNullException(nameof(apiKey), "API key must be set");
-            }
+            Validate(apiKey);
+            var requestUri = RequestUri(builder);
+            return await DeliveryApiResponseTyped(apiKey, requestUri);
+        }
 
-            if (string.IsNullOrWhiteSpace(_configurationProvider.Configuration.DeliveryVersion))
+        private async Task<DeliveryApiResponse<IContent>> DeliveryApiResponseTyped(string apiKey, Uri requestUri, CancellationToken? cancellationToken = null)
+        {
+            using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri))
             {
-                throw new ConfigurationException(nameof(EnterspeedDeliveryConfiguration.DeliveryVersion));
+                requestMessage.Headers.Add("X-Api-Key", apiKey);
+                var response = await SendAsync(cancellationToken, requestMessage);
+                var responseString = await response.Content.ReadAsStringAsync();
+
+                return new DeliveryApiResponse<IContent>
+                {
+                    StatusCode = response.StatusCode,
+                    Message = response.StatusCode != HttpStatusCode.OK && !string.IsNullOrWhiteSpace(responseString)
+                        ? _serializer.Deserialize<DeliveryApiError>(responseString)?.Message
+                        : null,
+                    Response = response.StatusCode == HttpStatusCode.OK
+                        ? _serializer.Deserialize<DeliveryResponse<IContent>>(responseString)
+                        : null
+                };
             }
         }
+
 
         private async Task<DeliveryApiResponse> DeliveryApiResponse(string apiKey, Uri requestUri, CancellationToken? cancellationToken = null)
         {
             using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri))
             {
-                HttpResponseMessage response;
-
                 requestMessage.Headers.Add("X-Api-Key", apiKey);
-
-                if (cancellationToken.HasValue)
-                {
-                    response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage, cancellationToken.Value);
-                }
-                else
-                {
-                    response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage);
-                }
-
+                var response = await SendAsync(cancellationToken, requestMessage);
                 var responseString = await response.Content.ReadAsStringAsync();
 
                 return new DeliveryApiResponse
