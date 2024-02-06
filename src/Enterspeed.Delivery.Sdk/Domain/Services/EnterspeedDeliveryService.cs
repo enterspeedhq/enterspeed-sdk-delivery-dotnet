@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Enterspeed.Delivery.Sdk.Api.Models;
@@ -8,6 +9,7 @@ using Enterspeed.Delivery.Sdk.Api.Providers;
 using Enterspeed.Delivery.Sdk.Api.Services;
 using Enterspeed.Delivery.Sdk.Configuration;
 using Enterspeed.Delivery.Sdk.Domain.Connection;
+using Enterspeed.Delivery.Sdk.Domain.Models;
 
 namespace Enterspeed.Delivery.Sdk.Domain.Services
 {
@@ -41,6 +43,27 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
 
             var requestUri = RequestUri(builder);
             return await DeliveryApiResponse(apiKey, requestUri);
+        }
+
+        public async Task<DeliveryApiResponse> FetchMultiple(string apiKey, GetByIdsOrHandle body, CancellationToken cancellationToken, Action<DeliveryQueryBuilder> builder = null)
+        {
+            Validate(apiKey);
+
+            var requestUri = RequestUri(builder);
+
+            var httpContent = new StringContent(_serializer.Serialize(body), Encoding.UTF8, "application/json");
+            return await DeliveryApiResponse(apiKey, requestUri, httpContent, cancellationToken);
+        }
+
+
+        public async Task<DeliveryApiResponse> FetchMultiple(string apiKey, GetByIdsOrHandle body, Action<DeliveryQueryBuilder> builder = null)
+        {
+            Validate(apiKey);
+
+            var requestUri = RequestUri(builder);
+
+            var httpContent = new StringContent(_serializer.Serialize(body), Encoding.UTF8, "application/json");
+            return await DeliveryApiResponse(apiKey, requestUri, httpContent);
         }
 
         private Uri RequestUri(Action<DeliveryQueryBuilder> builder)
@@ -85,7 +108,6 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
                 HttpResponseMessage response;
 
                 requestMessage.Headers.Add("X-Api-Key", apiKey);
-
                 if (cancellationToken.HasValue)
                 {
                     response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage, cancellationToken.Value);
@@ -108,6 +130,35 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
                         : null
                 };
             }
+        }
+
+        private async Task<DeliveryApiResponse> DeliveryApiResponse(string apiKey, Uri requestUri, HttpContent content, CancellationToken? cancellationToken = null)
+        {
+            HttpResponseMessage response;
+
+            _enterspeedDeliveryConnection.HttpClientConnection.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
+
+            if (cancellationToken.HasValue)
+            {
+                response = await _enterspeedDeliveryConnection.HttpClientConnection.PostAsync(requestUri, content, cancellationToken.Value);
+            }
+            else
+            {
+                response = await _enterspeedDeliveryConnection.HttpClientConnection.PostAsync(requestUri, content);
+            }
+
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            return new DeliveryApiResponse
+            {
+                StatusCode = response.StatusCode,
+                Message = response.StatusCode != HttpStatusCode.OK && !string.IsNullOrWhiteSpace(responseString)
+                    ? _serializer.Deserialize<DeliveryApiError>(responseString)?.Message
+                    : null,
+                Response = response.StatusCode == HttpStatusCode.OK
+                    ? _serializer.Deserialize<DeliveryResponse>(responseString)
+                    : null
+            };
         }
     }
 }
