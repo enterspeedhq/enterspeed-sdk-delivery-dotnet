@@ -45,28 +45,28 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
             return await DeliveryApiResponse(apiKey, requestUri);
         }
 
-        public async Task<DeliveryApiResponse> FetchMultiple(string apiKey, GetByIdsOrHandle body, CancellationToken cancellationToken, Action<DeliveryQueryBuilder> builder = null)
+        public async Task<DeliveryApiResponse> FetchMultiple(string apiKey, GetByIdsOrHandle body, CancellationToken cancellationToken)
         {
             Validate(apiKey);
 
-            var requestUri = RequestUri(builder);
+            var requestUri = RequestUri();
 
             var httpContent = new StringContent(_serializer.Serialize(body), Encoding.UTF8, "application/json");
             return await DeliveryApiResponse(apiKey, requestUri, httpContent, cancellationToken);
         }
 
 
-        public async Task<DeliveryApiResponse> FetchMultiple(string apiKey, GetByIdsOrHandle body, Action<DeliveryQueryBuilder> builder = null)
+        public async Task<DeliveryApiResponse> FetchMultiple(string apiKey, GetByIdsOrHandle body)
         {
             Validate(apiKey);
 
-            var requestUri = RequestUri(builder);
+            var requestUri = RequestUri();
 
             var httpContent = new StringContent(_serializer.Serialize(body), Encoding.UTF8, "application/json");
             return await DeliveryApiResponse(apiKey, requestUri, httpContent);
         }
 
-        private Uri RequestUri(Action<DeliveryQueryBuilder> builder)
+        private Uri RequestUri(Action<DeliveryQueryBuilder> builder = null)
         {
             var queryBuilder = new DeliveryQueryBuilder();
             builder?.Invoke(queryBuilder);

@@ -10,7 +10,7 @@ namespace Enterspeed.Delivery.Sdk.Api.Services
     {
         Task<DeliveryApiResponse> Fetch(string apiKey, Action<DeliveryQueryBuilder> builder = null);
         Task<DeliveryApiResponse> Fetch(string apiKey, CancellationToken cancellationToken, Action<DeliveryQueryBuilder> builder = null);
-        Task<DeliveryApiResponse> FetchMultiple(string apiKey, GetByIdsOrHandle body, CancellationToken cancellationToken, Action<DeliveryQueryBuilder> builder = null);
-        Task<DeliveryApiResponse> FetchMultiple(string apiKey, GetByIdsOrHandle body, Action<DeliveryQueryBuilder> builder = null);
+        Task<DeliveryApiResponse> FetchMultiple(string apiKey, GetByIdsOrHandle body, CancellationToken cancellationToken);
+        Task<DeliveryApiResponse> FetchMultiple(string apiKey, GetByIdsOrHandle body);
     }
 }
