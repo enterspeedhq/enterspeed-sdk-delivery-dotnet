@@ -135,7 +135,7 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
         {
             HttpResponseMessage response;
 
-            _enterspeedDeliveryConnection.HttpClientConnection.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
+            content.Headers.Add("X-Api-Key", apiKey);
 
             if (cancellationToken.HasValue)
             {
