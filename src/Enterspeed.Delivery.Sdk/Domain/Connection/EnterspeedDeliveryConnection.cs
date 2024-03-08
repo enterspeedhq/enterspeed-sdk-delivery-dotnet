@@ -76,8 +76,6 @@ namespace Enterspeed.Delivery.Sdk.Domain.Connection
             };
 #endif
 
-
-
             _httpClientConnection = httpClient;
 
             _httpClientConnection.DefaultRequestHeaders.Add("Accept", "application/json");
