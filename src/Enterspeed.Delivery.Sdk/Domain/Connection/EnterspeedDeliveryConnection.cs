@@ -57,9 +57,7 @@ namespace Enterspeed.Delivery.Sdk.Domain.Connection
                 throw new ConfigurationException(nameof(BaseUrl));
             }
 
-            HttpClient httpClient = null;
-
-
+            HttpClient httpClient;
 
 #if NETCOREAPP2_1_OR_GREATER
             var handler = new SocketsHttpHandler
