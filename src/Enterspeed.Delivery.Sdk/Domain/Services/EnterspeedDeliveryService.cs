@@ -126,7 +126,8 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
                         : null,
                     Response = response.StatusCode == HttpStatusCode.OK
                         ? _serializer.Deserialize<DeliveryResponse>(responseString)
-                        : null
+                        : null,
+                    Headers = response.Headers
                 };
             }
         }
@@ -156,7 +157,8 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
                     : null,
                 Response = response.StatusCode == HttpStatusCode.OK
                     ? _serializer.Deserialize<DeliveryResponse>(responseString)
-                    : null
+                    : null,
+                Headers = response.Headers
             };
         }
     }
