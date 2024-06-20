@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.2 - 2024-06-20]
+### Added
+- Added response headers to `DeliveryApiResponse` data transfer object
+
 ## [1.4.1 - 2024-03-18]
 ### Added
 - Implemented `SocketsHttpHandler` for `NETCOREAPP2_1` and up
