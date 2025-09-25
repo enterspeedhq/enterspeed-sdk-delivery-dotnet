@@ -61,6 +61,14 @@ public class TestService
         var response =   await _enterspeedDeliveryService.Fetch("environment-******-****-****-****-**********", builder => builder.WithDeliveryApiUrl("absolute url returned from delivery api"));
         return response;
     }
+    
+    // Example of how to fetch many view in one request.
+    public async Task<DeliveryApiResponse> WithDeliveryApiUrl()
+    {
+        var response =   await _enterspeedDeliveryService.FetchMany("environment-******-****-****-****-**********", ,
+                                                                        new GetByIdsOrHandle { Handles = new List<string> { "R7034112", "R7034108" }, Ids = new List<string> { "id1", "id2" } });
+        return response;
+    }
 }
 ```
 

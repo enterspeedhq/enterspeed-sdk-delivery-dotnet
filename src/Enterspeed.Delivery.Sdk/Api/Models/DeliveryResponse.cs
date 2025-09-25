@@ -5,7 +5,7 @@ namespace Enterspeed.Delivery.Sdk.Api.Models
     public class DeliveryResponse<T>
     {
         public Meta Meta { get; set; }
-        public Dictionary<string, T> Route { get; set; }
+        public T Route { get; set; }
         public Dictionary<string, T> Views { get; set; }
     }
 

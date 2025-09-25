@@ -11,7 +11,7 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
 {
     public abstract class BaseEnterspeedDeliveryService
     {
-        private readonly EnterspeedDeliveryConnection _enterspeedDeliveryConnection;
+        protected readonly EnterspeedDeliveryConnection _enterspeedDeliveryConnection;
         private readonly IEnterspeedConfigurationProvider _configurationProvider;
 
         protected BaseEnterspeedDeliveryService(
@@ -22,7 +22,7 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
             _configurationProvider = configurationProvider ?? throw new ArgumentNullException(nameof(configurationProvider));
         }
 
-        protected Uri RequestUri(Action<DeliveryQueryBuilder> builder)
+        protected Uri RequestUri(Action<DeliveryQueryBuilder> builder = null)
         {
             var queryBuilder = new DeliveryQueryBuilder();
             builder?.Invoke(queryBuilder);
