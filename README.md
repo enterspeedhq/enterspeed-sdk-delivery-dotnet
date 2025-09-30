@@ -82,6 +82,20 @@ public class TestService
 
         ...
     }
+
+    public class NavigationModel
+    {
+        public MuenuItem[] MenuItems { get; set; }
+        ...
+    }
+
+    public class FooterModel
+    {
+        [JsonPropertyName("footerLinks")]
+        public Link[] Links { get; set; }
+        public string CopyRightText { get; set; }
+        ...
+    }
 }
 ```
 
