@@ -43,14 +43,14 @@ public class TestService
     // Handle that has been setup to return a view in Enterspeed.
     public async  Task<DeliveryApiResponse> WithHandle()
     {
-        var response =await _enterspeedDeliveryService.Fetch("environment-******-****-****-****-**********", builder => builder.WithHandle("navigation"));
+        var response = await _enterspeedDeliveryService.Fetch("environment-******-****-****-****-**********", builder => builder.WithHandle("navigation"));
         return response;
     }
 
     // Example method that calls a Url route in Enterspeed.
     public async Task<DeliveryApiResponse> WithUrl()
     {
-        var response =   await _enterspeedDeliveryService.Fetch("environment-******-****-****-****-**********", builder => builder.WithUrl("http://localhost:3000/"));
+        var response = await _enterspeedDeliveryService.Fetch("environment-******-****-****-****-**********", builder => builder.WithUrl("http://localhost:3000/"));
         return response;
     }
     
@@ -58,16 +58,29 @@ public class TestService
     // Weebhook typically returns an Delivery Api Url. This means that we do not need to construct a Delivery Api Url in code.  
     public async Task<DeliveryApiResponse> WithDeliveryApiUrl()
     {
-        var response =   await _enterspeedDeliveryService.Fetch("environment-******-****-****-****-**********", builder => builder.WithDeliveryApiUrl("absolute url returned from delivery api"));
+        var response = await _enterspeedDeliveryService.Fetch("environment-******-****-****-****-**********", builder => builder.WithDeliveryApiUrl("absolute url returned from delivery api"));
         return response;
     }
     
     // Example of how to fetch many view in one request.
     public async Task<DeliveryApiResponse> WithDeliveryApiUrl()
     {
-        var response =   await _enterspeedDeliveryService.FetchMany("environment-******-****-****-****-**********", ,
+        var response = await _enterspeedDeliveryService.FetchMany("environment-******-****-****-****-**********", 
                                                                         new GetByIdsOrHandle { Handles = new List<string> { "R7034112", "R7034108" }, Ids = new List<string> { "id1", "id2" } });
         return response;
+    }
+    
+    // Example of how to fetch strongly typed views.
+    public async Task WithHandlesAsStronglyTyped()
+    {
+        var typedResponse  = await _enterspeedDeliveryService.FetchTyped("environment-******-****-****-****-**********", builder => builder
+                                                                                                                                        .WithHandle("navigation")
+                                                                                                                                        .WithHandle("footer"));
+
+        NavigationModel navigation = typedResult.Response.Views["navigation"].GetContent<NavigationModel>();
+        FooterModel navigation = typedResult.Response.Views["footer"].GetContent<FooterModel>();
+
+        ...
     }
 }
 ```
