@@ -22,10 +22,10 @@ namespace Enterspeed.Delivery.Sdk.Api.Models
             throw new NotImplementedException();
         }
 
-        public T GetContent<T>(string alias)
+        public T GetContent<T>(string propertyName)
         {
             #if NET6_0_OR_GREATER
-            var hasValue = Value.TryGetProperty(alias, out var value);
+            var hasValue = Value.TryGetProperty(propertyName, out var value);
             return hasValue
                 ? value.Deserialize<T>(_serializerOptions)
                 : default;

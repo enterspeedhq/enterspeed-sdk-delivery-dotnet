@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [1.5.0 - UNRELEASED]
 ### Added
-  - Added support for fetching views as strongly typed
+  - Added support for fetching views as strongly typed (.net 6 and up)
   
 ## [1.4.3 - 2025-05-16]
 ### Updated

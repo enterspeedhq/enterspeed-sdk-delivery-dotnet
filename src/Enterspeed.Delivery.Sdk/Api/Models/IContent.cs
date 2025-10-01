@@ -6,7 +6,14 @@ namespace Enterspeed.Delivery.Sdk.Api.Models
     {
         JsonElement Value { get; }
 
+        /// <summary>
+        /// Returns the content of the view serialized as a custom type
+        /// </summary>
         T GetContent<T>();
-        T GetContent<T>(string alias);
+
+        /// <summary>
+        /// Returns the content of first level property on the view serialized as a custom type
+        /// </summary>
+        T GetContent<T>(string propertyName);
     }
 }
