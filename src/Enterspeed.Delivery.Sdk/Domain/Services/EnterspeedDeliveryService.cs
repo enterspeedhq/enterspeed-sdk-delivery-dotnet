@@ -7,32 +7,27 @@ using System.Threading.Tasks;
 using Enterspeed.Delivery.Sdk.Api.Models;
 using Enterspeed.Delivery.Sdk.Api.Providers;
 using Enterspeed.Delivery.Sdk.Api.Services;
-using Enterspeed.Delivery.Sdk.Configuration;
 using Enterspeed.Delivery.Sdk.Domain.Connection;
 using Enterspeed.Delivery.Sdk.Domain.Models;
 
 namespace Enterspeed.Delivery.Sdk.Domain.Services
 {
-    public class EnterspeedDeliveryService : IEnterspeedDeliveryService
+    public class EnterspeedDeliveryService : BaseEnterspeedDeliveryService, IEnterspeedDeliveryService
     {
-        private readonly EnterspeedDeliveryConnection _enterspeedDeliveryConnection;
-        private readonly IEnterspeedConfigurationProvider _configurationProvider;
         private readonly IJsonSerializer _serializer;
 
         public EnterspeedDeliveryService(
             EnterspeedDeliveryConnection enterspeedDeliveryConnection,
             IEnterspeedConfigurationProvider configurationProvider,
             IJsonSerializer jsonSerializer)
+            : base(enterspeedDeliveryConnection, configurationProvider)
         {
-            _enterspeedDeliveryConnection = enterspeedDeliveryConnection ?? throw new ArgumentNullException(nameof(enterspeedDeliveryConnection));
-            _configurationProvider = configurationProvider ?? throw new ArgumentNullException(nameof(configurationProvider));
             _serializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
         }
 
         public async Task<DeliveryApiResponse> Fetch(string apiKey, CancellationToken cancellationToken, Action<DeliveryQueryBuilder> builder = null)
         {
             Validate(apiKey);
-
             var requestUri = RequestUri(builder);
             return await DeliveryApiResponse(apiKey, requestUri, cancellationToken);
         }
@@ -40,9 +35,22 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
         public async Task<DeliveryApiResponse> Fetch(string apiKey, Action<DeliveryQueryBuilder> builder = null)
         {
             Validate(apiKey);
-
             var requestUri = RequestUri(builder);
             return await DeliveryApiResponse(apiKey, requestUri);
+        }
+
+        public async Task<DeliveryApiResponse<IContent>> FetchTyped(string apiKey, CancellationToken cancellationToken, Action<DeliveryQueryBuilder> builder = null)
+        {
+            Validate(apiKey);
+            var requestUri = RequestUri(builder);
+            return await DeliveryApiResponseTyped(apiKey, requestUri, cancellationToken);
+        }
+
+        public async Task<DeliveryApiResponse<IContent>> FetchTyped(string apiKey, Action<DeliveryQueryBuilder> builder = null)
+        {
+            Validate(apiKey);
+            var requestUri = RequestUri(builder);
+            return await DeliveryApiResponseTyped(apiKey, requestUri);
         }
 
         public async Task<DeliveryApiResponse> FetchMany(string apiKey, GetByIdsOrHandle getByIdsOrHandle, CancellationToken cancellationToken)
@@ -65,39 +73,85 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
             return await DeliveryApiResponse(apiKey, requestUri, httpContent);
         }
 
-        private Uri RequestUri(Action<DeliveryQueryBuilder> builder = null)
+        public async Task<DeliveryApiResponse<IContent>> FetchManyTyped(string apiKey, GetByIdsOrHandle getByIdsOrHandle, CancellationToken cancellationToken)
         {
-            var queryBuilder = new DeliveryQueryBuilder();
-            builder?.Invoke(queryBuilder);
+            Validate(apiKey);
 
-            var query = queryBuilder.Build();
+            var requestUri = RequestUri();
 
-            Uri requestUri;
+            var httpContent = new StringContent(_serializer.Serialize(getByIdsOrHandle), Encoding.UTF8, "application/json");
+            return await DeliveryApiResponseTyped(apiKey, requestUri, httpContent, cancellationToken);
+        }
 
-            if (!query.IsDeliveryApiUrl)
+        public async Task<DeliveryApiResponse<IContent>> FetchManyTyped(string apiKey, GetByIdsOrHandle getByIdsOrHandle)
+        {
+            Validate(apiKey);
+
+            var requestUri = RequestUri();
+
+            var httpContent = new StringContent(_serializer.Serialize(getByIdsOrHandle), Encoding.UTF8, "application/json");
+            return await DeliveryApiResponseTyped(apiKey, requestUri, httpContent);
+        }
+
+        private async Task<DeliveryApiResponse<IContent>> DeliveryApiResponseTyped(string apiKey, Uri requestUri, CancellationToken? cancellationToken = null)
+        {
+            using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri))
             {
-                requestUri = query.GetUri(_enterspeedDeliveryConnection.HttpClientConnection.BaseAddress,
-                    $"/v{_configurationProvider.Configuration.DeliveryVersion}");
+                HttpResponseMessage response;
+
+                requestMessage.Headers.Add("X-Api-Key", apiKey);
+                if (cancellationToken.HasValue)
+                {
+                    response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage, cancellationToken.Value);
+                }
+                else
+                {
+                    response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage);
+                }
+                var responseString = await response.Content.ReadAsStringAsync();
+
+                return new DeliveryApiResponse<IContent>
+                {
+                    StatusCode = response.StatusCode,
+                    Message = response.StatusCode != HttpStatusCode.OK && !string.IsNullOrWhiteSpace(responseString)
+                        ? _serializer.Deserialize<DeliveryApiError>(responseString)?.Message
+                        : null,
+                    Response = response.StatusCode == HttpStatusCode.OK
+                        ? _serializer.Deserialize<DeliveryResponse<IContent>>(responseString)
+                        : null,
+                    Headers = response.Headers
+                };
+            }
+        }
+
+        private async Task<DeliveryApiResponse<IContent>> DeliveryApiResponseTyped(string apiKey, Uri requestUri, HttpContent content, CancellationToken? cancellationToken = null)
+        {
+            HttpResponseMessage response;
+
+            content.Headers.Add("X-Api-Key", apiKey);
+
+            if (cancellationToken.HasValue)
+            {
+                response = await _enterspeedDeliveryConnection.HttpClientConnection.PostAsync(requestUri, content, cancellationToken.Value);
             }
             else
             {
-                requestUri = query.GetUri();
+                response = await _enterspeedDeliveryConnection.HttpClientConnection.PostAsync(requestUri, content);
             }
 
-            return requestUri;
-        }
+            var responseString = await response.Content.ReadAsStringAsync();
 
-        private void Validate(string apiKey)
-        {
-            if (string.IsNullOrWhiteSpace(apiKey))
+            return new DeliveryApiResponse<IContent>
             {
-                throw new ArgumentNullException(nameof(apiKey), "API key must be set");
-            }
-
-            if (string.IsNullOrWhiteSpace(_configurationProvider.Configuration.DeliveryVersion))
-            {
-                throw new ConfigurationException(nameof(EnterspeedDeliveryConfiguration.DeliveryVersion));
-            }
+                StatusCode = response.StatusCode,
+                Message = response.StatusCode != HttpStatusCode.OK && !string.IsNullOrWhiteSpace(responseString)
+                    ? _serializer.Deserialize<DeliveryApiError>(responseString)?.Message
+                    : null,
+                Response = response.StatusCode == HttpStatusCode.OK
+                    ? _serializer.Deserialize<DeliveryResponse<IContent>>(responseString)
+                    : null,
+                Headers = response.Headers
+            };
         }
 
         private async Task<DeliveryApiResponse> DeliveryApiResponse(string apiKey, Uri requestUri, CancellationToken? cancellationToken = null)
