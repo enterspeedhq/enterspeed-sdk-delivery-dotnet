@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -25,75 +25,87 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
             _serializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
         }
 
+        // Every operation captures HttpClientConnection exactly once and uses that client both to build
+        // the request URI and to send the request: the connection can swap clients between getter calls
+        // (Flush, or the timed refresh on the netstandard2.0 asset), and mixing two generations within
+        // one operation is unsafe if their configuration ever differs.
         public async Task<DeliveryApiResponse> Fetch(string apiKey, CancellationToken cancellationToken, Action<DeliveryQueryBuilder> builder = null)
         {
             Validate(apiKey);
-            var requestUri = RequestUri(builder);
-            return await DeliveryApiResponse(apiKey, requestUri, cancellationToken);
+            var client = _enterspeedDeliveryConnection.HttpClientConnection;
+            var requestUri = RequestUri(client, builder);
+            return await DeliveryApiResponse(client, apiKey, requestUri, cancellationToken);
         }
 
         public async Task<DeliveryApiResponse> Fetch(string apiKey, Action<DeliveryQueryBuilder> builder = null)
         {
             Validate(apiKey);
-            var requestUri = RequestUri(builder);
-            return await DeliveryApiResponse(apiKey, requestUri);
+            var client = _enterspeedDeliveryConnection.HttpClientConnection;
+            var requestUri = RequestUri(client, builder);
+            return await DeliveryApiResponse(client, apiKey, requestUri);
         }
 
         public async Task<DeliveryApiResponse<IContent>> FetchTyped(string apiKey, CancellationToken cancellationToken, Action<DeliveryQueryBuilder> builder = null)
         {
             Validate(apiKey);
-            var requestUri = RequestUri(builder);
-            return await DeliveryApiResponseTyped(apiKey, requestUri, cancellationToken);
+            var client = _enterspeedDeliveryConnection.HttpClientConnection;
+            var requestUri = RequestUri(client, builder);
+            return await DeliveryApiResponseTyped(client, apiKey, requestUri, cancellationToken);
         }
 
         public async Task<DeliveryApiResponse<IContent>> FetchTyped(string apiKey, Action<DeliveryQueryBuilder> builder = null)
         {
             Validate(apiKey);
-            var requestUri = RequestUri(builder);
-            return await DeliveryApiResponseTyped(apiKey, requestUri);
+            var client = _enterspeedDeliveryConnection.HttpClientConnection;
+            var requestUri = RequestUri(client, builder);
+            return await DeliveryApiResponseTyped(client, apiKey, requestUri);
         }
 
         public async Task<DeliveryApiResponse> FetchMany(string apiKey, GetByIdsOrHandle getByIdsOrHandle, CancellationToken cancellationToken)
         {
             Validate(apiKey);
 
-            var requestUri = RequestUri();
+            var client = _enterspeedDeliveryConnection.HttpClientConnection;
+            var requestUri = RequestUri(client);
 
             var httpContent = new StringContent(_serializer.Serialize(getByIdsOrHandle), Encoding.UTF8, "application/json");
-            return await DeliveryApiResponse(apiKey, requestUri, httpContent, cancellationToken);
+            return await DeliveryApiResponse(client, apiKey, requestUri, httpContent, cancellationToken);
         }
 
         public async Task<DeliveryApiResponse> FetchMany(string apiKey, GetByIdsOrHandle getByIdsOrHandle)
         {
             Validate(apiKey);
 
-            var requestUri = RequestUri();
+            var client = _enterspeedDeliveryConnection.HttpClientConnection;
+            var requestUri = RequestUri(client);
 
             var httpContent = new StringContent(_serializer.Serialize(getByIdsOrHandle), Encoding.UTF8, "application/json");
-            return await DeliveryApiResponse(apiKey, requestUri, httpContent);
+            return await DeliveryApiResponse(client, apiKey, requestUri, httpContent);
         }
 
         public async Task<DeliveryApiResponse<IContent>> FetchManyTyped(string apiKey, GetByIdsOrHandle getByIdsOrHandle, CancellationToken cancellationToken)
         {
             Validate(apiKey);
 
-            var requestUri = RequestUri();
+            var client = _enterspeedDeliveryConnection.HttpClientConnection;
+            var requestUri = RequestUri(client);
 
             var httpContent = new StringContent(_serializer.Serialize(getByIdsOrHandle), Encoding.UTF8, "application/json");
-            return await DeliveryApiResponseTyped(apiKey, requestUri, httpContent, cancellationToken);
+            return await DeliveryApiResponseTyped(client, apiKey, requestUri, httpContent, cancellationToken);
         }
 
         public async Task<DeliveryApiResponse<IContent>> FetchManyTyped(string apiKey, GetByIdsOrHandle getByIdsOrHandle)
         {
             Validate(apiKey);
 
-            var requestUri = RequestUri();
+            var client = _enterspeedDeliveryConnection.HttpClientConnection;
+            var requestUri = RequestUri(client);
 
             var httpContent = new StringContent(_serializer.Serialize(getByIdsOrHandle), Encoding.UTF8, "application/json");
-            return await DeliveryApiResponseTyped(apiKey, requestUri, httpContent);
+            return await DeliveryApiResponseTyped(client, apiKey, requestUri, httpContent);
         }
 
-        private async Task<DeliveryApiResponse<IContent>> DeliveryApiResponseTyped(string apiKey, Uri requestUri, CancellationToken? cancellationToken = null)
+        private async Task<DeliveryApiResponse<IContent>> DeliveryApiResponseTyped(HttpClient client, string apiKey, Uri requestUri, CancellationToken? cancellationToken = null)
         {
             using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri))
             {
@@ -102,11 +114,11 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
                 requestMessage.Headers.Add("X-Api-Key", apiKey);
                 if (cancellationToken.HasValue)
                 {
-                    response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage, cancellationToken.Value);
+                    response = await client.SendAsync(requestMessage, cancellationToken.Value);
                 }
                 else
                 {
-                    response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage);
+                    response = await client.SendAsync(requestMessage);
                 }
                 var responseString = await response.Content.ReadAsStringAsync();
 
@@ -124,7 +136,7 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
             }
         }
 
-        private async Task<DeliveryApiResponse<IContent>> DeliveryApiResponseTyped(string apiKey, Uri requestUri, HttpContent content, CancellationToken? cancellationToken = null)
+        private async Task<DeliveryApiResponse<IContent>> DeliveryApiResponseTyped(HttpClient client, string apiKey, Uri requestUri, HttpContent content, CancellationToken? cancellationToken = null)
         {
             HttpResponseMessage response;
 
@@ -132,11 +144,11 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
 
             if (cancellationToken.HasValue)
             {
-                response = await _enterspeedDeliveryConnection.HttpClientConnection.PostAsync(requestUri, content, cancellationToken.Value);
+                response = await client.PostAsync(requestUri, content, cancellationToken.Value);
             }
             else
             {
-                response = await _enterspeedDeliveryConnection.HttpClientConnection.PostAsync(requestUri, content);
+                response = await client.PostAsync(requestUri, content);
             }
 
             var responseString = await response.Content.ReadAsStringAsync();
@@ -154,7 +166,7 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
             };
         }
 
-        private async Task<DeliveryApiResponse> DeliveryApiResponse(string apiKey, Uri requestUri, CancellationToken? cancellationToken = null)
+        private async Task<DeliveryApiResponse> DeliveryApiResponse(HttpClient client, string apiKey, Uri requestUri, CancellationToken? cancellationToken = null)
         {
             using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri))
             {
@@ -163,11 +175,11 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
                 requestMessage.Headers.Add("X-Api-Key", apiKey);
                 if (cancellationToken.HasValue)
                 {
-                    response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage, cancellationToken.Value);
+                    response = await client.SendAsync(requestMessage, cancellationToken.Value);
                 }
                 else
                 {
-                    response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage);
+                    response = await client.SendAsync(requestMessage);
                 }
 
                 var responseString = await response.Content.ReadAsStringAsync();
@@ -186,7 +198,7 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
             }
         }
 
-        private async Task<DeliveryApiResponse> DeliveryApiResponse(string apiKey, Uri requestUri, HttpContent content, CancellationToken? cancellationToken = null)
+        private async Task<DeliveryApiResponse> DeliveryApiResponse(HttpClient client, string apiKey, Uri requestUri, HttpContent content, CancellationToken? cancellationToken = null)
         {
             HttpResponseMessage response;
 
@@ -194,11 +206,11 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
 
             if (cancellationToken.HasValue)
             {
-                response = await _enterspeedDeliveryConnection.HttpClientConnection.PostAsync(requestUri, content, cancellationToken.Value);
+                response = await client.PostAsync(requestUri, content, cancellationToken.Value);
             }
             else
             {
-                response = await _enterspeedDeliveryConnection.HttpClientConnection.PostAsync(requestUri, content);
+                response = await client.PostAsync(requestUri, content);
             }
 
             var responseString = await response.Content.ReadAsStringAsync();

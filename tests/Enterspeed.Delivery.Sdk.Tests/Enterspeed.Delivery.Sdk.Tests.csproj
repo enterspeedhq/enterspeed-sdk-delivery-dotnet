@@ -1,10 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <!-- net48 runs the suite against the SDK's netstandard2.0 asset (the timed-refresh branch),
+         net6.0 against the modern asset. CI's test job runs on windows-latest, which can execute both. -->
+    <TargetFrameworks>net6.0;net48</TargetFrameworks>
+    <LangVersion>10.0</LangVersion>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Lets the net48 leg compile on non-Windows dev machines (build-only; execution needs Windows/CI). -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoFixture" Version="4.17.0" />

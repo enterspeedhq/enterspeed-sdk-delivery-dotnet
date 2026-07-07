@@ -24,6 +24,19 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
 
         protected Uri RequestUri(Action<DeliveryQueryBuilder> builder = null)
         {
+            return RequestUri(_enterspeedDeliveryConnection.HttpClientConnection, builder);
+        }
+
+        /// <summary>
+        /// Builds the request URI from the given client's base address. Capture
+        /// <see cref="EnterspeedDeliveryConnection.HttpClientConnection"/> once per operation and use the
+        /// same client to build the URI and send the request: the connection can swap clients between
+        /// getter calls (<see cref="EnterspeedDeliveryConnection.Flush"/>, or the timed refresh on the
+        /// netstandard2.0 asset), and mixing two generations within one operation is unsafe if their
+        /// configuration ever differs.
+        /// </summary>
+        protected Uri RequestUri(HttpClient client, Action<DeliveryQueryBuilder> builder = null)
+        {
             var queryBuilder = new DeliveryQueryBuilder();
             builder?.Invoke(queryBuilder);
 
@@ -33,7 +46,7 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
 
             if (!query.IsDeliveryApiUrl)
             {
-                requestUri = query.GetUri(_enterspeedDeliveryConnection.HttpClientConnection.BaseAddress,
+                requestUri = query.GetUri(client.BaseAddress,
                     $"/v{_configurationProvider.Configuration.DeliveryVersion}");
             }
             else
@@ -59,14 +72,16 @@ namespace Enterspeed.Delivery.Sdk.Domain.Services
 
         protected async Task<HttpResponseMessage> SendAsync(CancellationToken? cancellationToken, HttpRequestMessage requestMessage)
         {
+            var client = _enterspeedDeliveryConnection.HttpClientConnection;
+
             HttpResponseMessage response;
             if (cancellationToken.HasValue)
             {
-                response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage, cancellationToken.Value);
+                response = await client.SendAsync(requestMessage, cancellationToken.Value);
             }
             else
             {
-                response = await _enterspeedDeliveryConnection.HttpClientConnection.SendAsync(requestMessage);
+                response = await client.SendAsync(requestMessage);
             }
 
             return response;
