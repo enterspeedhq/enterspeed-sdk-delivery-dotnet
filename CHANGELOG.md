@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+### Fixed
+- Fixed thread-safety races in `EnterspeedDeliveryConnection` that could intermittently surface as `NullReferenceException` inside `EnterspeedDeliveryService` under concurrent load, or let a request observe a half-configured `HttpClient`. Each delivery operation now also uses one client capture for both building the request URI and sending the request.
+
+### Changed
+- On .NET Core 2.1+/.NET 5+ the `HttpClient` is no longer recreated on a timer. `ConnectionTimeout` now configures `SocketsHttpHandler.PooledConnectionLifetime` (previously hardcoded to 60 seconds, silently ignoring the configured value), which is the supported DNS-rotation mechanism for a long-lived client; `Flush()` still forces a new client on demand. On .NET Framework (the netstandard2.0 asset) timed recreation remains and is now measured with a monotonic clock.
+- `ConnectionTimeout` values less than or equal to 0 are treated as 1 second instead of recreating the client on every request.
+- `AddEnterspeedDeliveryService` now registers the connection as a singleton (previously transient) and also registers it as `IEnterspeedDeliveryConnection`.
+- `EnterspeedDeliveryConnection` now throws `ObjectDisposedException` when used after disposal, and `Dispose()` is idempotent.
+
 ## [1.5.0 - 2025-10-01]
 ### Added
   - Added support for fetching views as strongly typed (.net 6 and up)
